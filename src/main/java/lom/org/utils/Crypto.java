@@ -17,7 +17,27 @@ import javax.crypto.spec.SecretKeySpec;
 public class Crypto {
 
 	public static void main(String[] args) throws Exception {
+		String password = System.getProperty("password");
+        if (password == null) {
+            throw new IllegalArgumentException("Run with -Dpassword=<password>");
+        }
 
+        // The salt (probably) can be stored along with the encrypted data
+        byte[] salt = new String("12345678").getBytes();
+
+        // Decreasing this speeds down startup time and can be useful during testing, but it also makes it easier for brute force attackers
+        int iterationCount = 40000;
+        // Other values give me java.security.InvalidKeyException: Illegal key size or default parameters
+        int keyLength = 128;
+        SecretKeySpec key = createSecretKey(System.getProperty("password").toCharArray(),
+                salt, iterationCount, keyLength);
+
+        String originalPassword = "secret";
+        System.out.println("Original password: " + originalPassword);
+        String encryptedPassword = encrypt(originalPassword, key);
+        System.out.println("Encrypted password: " + encryptedPassword);
+        String decryptedPassword = decrypt(encryptedPassword, key);
+        System.out.println("Decrypted password: " + decryptedPassword);
 	}
 	
     private static SecretKeySpec createSecretKey(char[] password, byte[] salt, int iterationCount, int keyLength) throws NoSuchAlgorithmException, InvalidKeySpecException {
